@@ -2,6 +2,8 @@ Venmo Cordova plugin.
 
 Api looks like:
 
+```javascript
+
 var success = function(note, amount, code) {
   console.log('success: ' + note + ' : ' + amount + ' : ' + code);
 };
@@ -9,7 +11,6 @@ var error = function(err) {
   console.log('err: ' + err);
 };
 
-```javascript
 var appId = '1234';
 var appName = "Demo";
 var recipients = "andrew@andrew-blah.com";
