@@ -35,6 +35,14 @@ public class Venmo extends CordovaPlugin {
   }
 
   @Override
+  /**
+   * Called when the activity receives a new intent.
+   */
+  public void onNewIntent(Intent intent) {
+    Log.d(TAG, "onNewIntent");
+  }
+
+  @Override
   public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
     Log.d(TAG, "VenmoPlugin execute action: " + action + " args: " + args.toString());
 
@@ -52,7 +60,7 @@ public class Venmo extends CordovaPlugin {
 
         try {
           Intent venmoIntent = venmoLib.openVenmoPayment(myAppId,myAppName,recipients,amount,note,txn);
-          cordova.getActivity().startActivityForResult(venmoIntent, 123);
+          this.cordova.startActivityForResult((CordovaPlugin) this, venmoIntent, 123);
 
           return true;
         } catch (Exception e) {
@@ -71,40 +79,44 @@ public class Venmo extends CordovaPlugin {
 
   @Override
   public void onActivityResult(int requestCode, int resultCode, Intent data) {
-
     Log.d(TAG, "onActivityResult breh");
 
     switch(requestCode) {
-        case 123: {
-            if(resultCode == -1) {
-                String signedrequest = data.getStringExtra("signedrequest");
+      case 123: {
+        if(resultCode == -1) {
+            String signedrequest = data.getStringExtra("signedrequest");
 
-                Log.d(TAG, "result is A OK");
+            Log.d(TAG, "result is A OK");
 
-                if(signedrequest != null) {
-                    VenmoLibrary.VenmoResponse response = (new VenmoLibrary()).validateVenmoPaymentResponse(signedrequest, "qzXgnaB4XbJQx3y8vQtB76PTGSKqbPU");
-                    if(response.getSuccess().equals("1")) {
-                        //Payment successful.  Use data from response object to display a success message
-                        String note = response.getNote();
-                        String amount = response.getAmount();
-                        cbContext.success(amount);
-                    }
+            Log.d(TAG, "signedrequest: " + signedrequest);
+
+            if(signedrequest != null) {
+                VenmoLibrary.VenmoResponse response = (new VenmoLibrary()).validateVenmoPaymentResponse(signedrequest, "qzXgnaB4XbJQx3y8vQtB76PTGSKqbPU");
+                String successCode = response.getSuccess();
+                Log.d(TAG, "response.getSuccess: " + successCode);
+
+                if(successCode.equals("1") || successCode.equals("0")) {
+                    //Payment successful.  Use data from response object to display a success message
+                    String note = response.getNote();
+                    String amount = response.getAmount();
+                    cbContext.success(note, amount, successCode);
                 }
-                else {
-                    String error_message = data.getStringExtra("error_message");
-                    Log.d(TAG, "error crap");
-
-                    // cbContext.error(error_message);
-                    //An error ocurred.  Make sure to display the error_message to the user
-                }                               
             }
-            else if(resultCode == 0) {
-              Log.d(TAG, "cancelled that crap");
+            else {
+              String error_message = data.getStringExtra("error_message");
+              //An error ocurred.  Make sure to display the error_message to the user
+              Log.d(TAG, "error crap");
 
-                //The user cancelled the payment
-            }
+              cbContext.error(error_message);
+            }                               
+        } else if(resultCode == 0) {
+            //The user cancelled the payment
+          Log.d(TAG, "cancelled that crap");
+
+          cbContext.error("cancelled");
+        }
         break;
-        }           
+      }           
     }
   }
 }

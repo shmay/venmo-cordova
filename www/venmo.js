@@ -15,7 +15,7 @@ function Venmo () {};
  * @param {Function} onFail    The function to call in case of error
  */
 
-Venmo.prototype.send = function (appId, appName, recipients, amount, note, txn, onSuccess, onFail) {
+Venmo.prototype.send = function (onSuccess, onFail, appId, appName, recipients, amount, note, txn) {
   if (typeof text === "undefined" || text === null) text = "";
 	cordova.exec(onSuccess, onFail, "Venmo", "send", [appId,appName,recipients,amount,note,txn]);
 };
