@@ -35,4 +35,42 @@
             </feature>
         </config-file>
     </platform>
+
+    <!-- ios -->
+    <platform name="ios">
+      <config-file target="config.xml" parent="/*">
+          <feature name="Venmo">
+              <param name="ios-package" value="CDVenmo" />
+          </feature>
+      </config-file>
+
+      <header-file src="src/ios/CDVenmo.h" />
+      <source-file src="src/ios/CDVenmo.m" />
+
+      <header-file src="src/ios/venmo-sdk/Venmo.h" />
+
+      <header-file src="src/ios/venmo-sdk/URL\ Handling/VENURLProtocol.h"  />
+      <header-file src="src/ios/venmo-sdk/Supporting\ Files/VENPermissionConstants.h"  />
+      <header-file src="src/ios/venmo-sdk/Supporting\ Files/VENErrors.h"  />
+
+      <header-file src="src/ios/venmo-sdk/Models/VENSession.h"  />
+      <header-file src="src/ios/venmo-sdk/Models/VENPermission.h"  />
+
+      <header-file src="src/ios/venmo-sdk/Encryption/VENBase64_Internal.h"  />
+      <header-file src="src/ios/venmo-sdk/Encryption/VENDefines_Internal.h"  />
+      <header-file src="src/ios/venmo-sdk/Encryption/VENHMAC_SHA256_Internal.h"  />
+      <header-file src="src/ios/venmo-sdk/Encryption/VENRequestDecoder.h"  />
+
+      <header-file src="src/ios/venmo-sdk/Categories/NSBundle+VenmoSDK.h"  />
+      <header-file src="src/ios/venmo-sdk/Categories/NSDictionary+VenmoSDK.h"  />
+      <header-file src="src/ios/venmo-sdk/Categories/NSError+VenmoSDK.h"  />
+      <header-file src="src/ios/venmo-sdk/Categories/NSString+MD5Addition.h"  />
+      <header-file src="src/ios/venmo-sdk/Categories/NSString+VenmoSDK.h"  />
+      <header-file src="src/ios/venmo-sdk/Categories/NSURL+VenmoSDK.h"  />
+      <header-file src="src/ios/venmo-sdk/Categories/UIDevice+VenmoSDK.h"  />
+      <header-file src="src/ios/venmo-sdk/Categories/VENTransaction+VenmoSDK.h"  />
+      <header-file src="src/ios/venmo-sdk/Categories/VENUser+VenmoSDK.h"  />
+
+    </platform>
+
 </plugin>

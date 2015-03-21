@@ -1,6 +1,6 @@
-Venmo Cordova plugin.
+Cordova Venmo plugin.
 
-Api looks like:
+API looks like:
 
 ```javascript
 
