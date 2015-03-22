@@ -1,7 +1,7 @@
 #import <Foundation/Foundation.h>
 #import <Cordova/CDVPlugin.h>
 
-@interface CDVClipboard : CDVPlugin {}
+@interface CDVenmo : CDVPlugin {}
 
 - (void)send:(CDVInvokedUrlCommand*)command;
 
