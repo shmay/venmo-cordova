@@ -1,4 +1,4 @@
-#import <VENCore/VENTransaction.h>
+#import "VENTransaction.h"
 
 @interface VENTransaction (VenmoSDK)
 

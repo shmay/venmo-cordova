@@ -1,3 +1,5 @@
+#import <Foundation/Foundation.h>
+
 static NSString * const VENPermissionAccessFriends  = @"access_friends";
 static NSString * const VENPermissionAccessEmail    = @"access_email";
 static NSString * const VENPermissionAccessPhone    = @"access_phone";

@@ -1,5 +1,5 @@
 #import "Venmo.h"
-#import <VENCore/NSDictionary+VENCore.h>
+#import "NSDictionary+VENCore.h"
 
 #import "VENDefines_Internal.h"
 #import "NSURL+VenmoSDK.h"

@@ -1,3 +1,5 @@
+#import <Foundation/Foundation.h>
+
 #import "Venmo.h"
 #import "VENUser+VenmoSDK.h"
 

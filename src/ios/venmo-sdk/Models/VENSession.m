@@ -1,7 +1,7 @@
 #import "VENSession.h"
 
-#import <SSKeychain/SSKeychainQuery.h>
-#import <VENCore/VENCore.h>
+#import "SSKeychainQuery.h"
+#import "VENCore.h"
 
 NSString *const kVENKeychainServiceName = @"venmo-ios-sdk";
 NSString *const kVENKeychainAccountNamePrefix = @"venmo";
