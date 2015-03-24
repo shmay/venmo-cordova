@@ -1,19 +1,6 @@
 #import "Venmo.h"
 
 #import "NSBundle+VenmoSDK.h"
-#import "NSDictionary+VenmoSDK.h"
-#import "NSError+VenmoSDK.h"
-#import "NSURL+VenmoSDK.h"
-#import "VENBase64_Internal.h"
-#import "VENDefines_Internal.h"
-#import "VENErrors.h"
-#import "VENHMAC_SHA256_Internal.h"
-#import "VENURLProtocol.h"
-#import "VENUser.h"
-#import "VENSession.h"
-
-#import <VENCore/VENCore.h>
-#import <VENCore/VENCreateTransactionRequest.h>
 #import <CMDQueryStringSerialization/CMDQueryStringSerialization.h>
 
 #if __IPHONE_OS_VERSION_MIN_REQUIRED < __IPHONE_6_0
@@ -21,12 +8,6 @@
 #endif
 
 static Venmo *sharedInstance = nil;
-
-@interface VENSession ()
-
-@property (assign, nonatomic, readwrite) VENSessionState state;
-
-@end
 
 @interface Venmo ()
 
@@ -36,8 +17,6 @@ static Venmo *sharedInstance = nil;
 
 @property (copy, nonatomic, readwrite) VENTransactionCompletionHandler transactionCompletionHandler;
 @property (copy, nonatomic, readwrite) VENOAuthCompletionHandler OAuthCompletionHandler;
-
-@property (nonatomic) BOOL internalDevelopment;
 
 @end
 
@@ -92,71 +71,6 @@ static Venmo *sharedInstance = nil;
 }
 
 
-#pragma mark - Sessions
-
-- (void)requestPermissions:(NSArray *)permissions
-     withCompletionHandler:(VENOAuthCompletionHandler)completionHandler {
-    NSString *scopeURLEncoded = [permissions componentsJoinedByString:@"%20"];
-    self.OAuthCompletionHandler = completionHandler;
-    self.session.state = VENSessionStateOpening;
-
-    NSString *baseURL;
-    if ([Venmo isVenmoAppInstalled]) {
-        baseURL = @"venmo://";
-    } else {
-        baseURL = [self baseURLPath];
-    }
-    NSURL *authURL = [NSURL URLWithString:[NSString stringWithFormat:@"%@oauth/authorize?sdk=ios&client_id=%@&scope=%@&response_type=code", baseURL, self.appId, scopeURLEncoded]];
-
-    [[UIApplication sharedApplication] openURL:authURL];
-}
-
-
-- (BOOL)isSessionValid {
-    NSDate *now = [NSDate date];
-    if (self.session.state == VENSessionStateOpen &&
-        [[self.session.expirationDate earlierDate:now] isEqualToDate:now]) {
-        return YES;
-    }
-    return NO;
-}
-
-
-- (BOOL)shouldRefreshToken {
-    NSDate *now = [NSDate date];
-    if (self.session.state == VENSessionStateOpen &&
-        [[self.session.expirationDate laterDate:now] isEqualToDate:now]) {
-        return YES;
-    }
-    return NO;
-}
-
-
-- (void)refreshTokenWithCompletionHandler:(VENRefreshTokenCompletionHandler)handler {
-    if (self.session.state != VENSessionStateOpen) {
-        DLog(@"The session is not open. Call requestPermissions:withCompletionHandler to open a session.");
-        NSError *error = [NSError sessionNotOpenError];
-        if (handler) {
-            handler(nil, NO, error);
-        }
-        return;
-    }
-    [self.session refreshTokenWithAppId:self.appId
-                                 secret:self.appSecret
-                      completionHandler:^(NSString *accessToken, BOOL success, NSError *error) {
-                          if (handler) {
-                              handler(accessToken, success, error);
-                          }
-                      }];
-}
-
-
-- (void)logout {
-    [self.session close];
-    [VENSession deleteSessionWithAppId:self.appId];
-}
-
-
 #pragma mark - Sending a Transaction
 
 - (void)sendAppSwitchTransactionTo:(NSString *)recipientHandle
@@ -178,171 +92,6 @@ static Venmo *sharedInstance = nil;
                                recoverySuggestion:@"Please install Venmo."];
         completionHandler(nil, NO, error);
     }   
-}
-
-
-- (void)sendAPITransactionTo:(NSString *)recipientHandle
-             transactionType:(VENTransactionType)type
-                      amount:(NSUInteger)amount
-                        note:(NSString *)note
-                    audience:(VENTransactionAudience)audience
-           completionHandler:(VENTransactionCompletionHandler)completionHandler {
-
-    [self validateAPIRequestWithCompletionHandler:completionHandler];
-    VENTransactionTarget *target = [[VENTransactionTarget alloc] initWithHandle:recipientHandle amount:amount];
-    VENCreateTransactionRequest *request = [[VENCreateTransactionRequest alloc] init];
-    request.transactionType = type;
-    request.audience = audience;
-    request.note = note;
-    BOOL addedTarget = [request addTransactionTarget:target];
-    if (!addedTarget) {
-        NSError *error = [NSError errorWithDomain:VenmoSDKDomain
-                                             code:VENSDKErrorTransactionFailed
-                                      description:@"Invalid recipient"
-                               recoverySuggestion:@"Please enter a valid phone, email, username, or Venmo user ID"];
-        completionHandler(nil, NO, error);
-        return;
-    }
-
-    [request sendWithSuccess:^(NSArray *sentTransactions, VENHTTPResponse *response) {
-
-        VENTransaction *transaction = (VENTransaction *)[sentTransactions firstObject];
-        if (completionHandler) {
-            completionHandler(transaction, YES, nil);
-        }
-
-    } failure:^(NSArray *sentTransactions, VENHTTPResponse *response, NSError *error) {
-
-        if (completionHandler) {
-            completionHandler(nil, NO, error);
-        }
-    }];
-}
-
-
-- (void)sendTransactionTo:(NSString *)recipientHandle
-          transactionType:(VENTransactionType)type
-                   amount:(NSUInteger)amount
-                     note:(NSString *)note
-                 audience:(VENTransactionAudience)audience
-        completionHandler:(VENTransactionCompletionHandler)completionHandler {
-
-    if (self.defaultTransactionMethod == VENTransactionMethodAPI) {
-        [self sendAPITransactionTo:recipientHandle transactionType:type amount:amount note:note audience:audience completionHandler:completionHandler];
-    }
-    else {
-        [self sendAppSwitchTransactionTo:recipientHandle transactionType:type amount:amount note:note completionHandler:completionHandler];
-    }
-}
-
-
-- (void)sendPaymentTo:(NSString *)recipientHandle
-               amount:(NSUInteger)amount
-                 note:(NSString *)note
-             audience:(VENTransactionAudience)audience
-    completionHandler:(VENTransactionCompletionHandler)handler {
-
-    [self sendTransactionTo:recipientHandle transactionType:VENTransactionTypePay amount:amount note:note audience:audience completionHandler:handler];
-}
-
-
-- (void)sendPaymentTo:(NSString *)recipientHandle
-               amount:(NSUInteger)amount
-                 note:(NSString *)note
-    completionHandler:(VENTransactionCompletionHandler)handler {
-
-    [self sendPaymentTo:recipientHandle amount:amount note:note audience:VENTransactionAudienceUserDefault completionHandler:handler];
-}
-
-
-- (void)sendRequestTo:(NSString *)recipientHandle
-               amount:(NSUInteger)amount
-                 note:(NSString *)note
-             audience:(VENTransactionAudience)audience
-    completionHandler:(VENTransactionCompletionHandler)handler {
-
-    [self sendTransactionTo:recipientHandle transactionType:VENTransactionTypeCharge amount:amount note:note audience:audience completionHandler:handler];
-}
-
-
-- (void)sendRequestTo:(NSString *)recipientHandle
-               amount:(NSUInteger)amount
-                 note:(NSString *)note
-    completionHandler:(VENTransactionCompletionHandler)handler {
-
-    [self sendRequestTo:recipientHandle amount:amount note:note audience:VENTransactionAudienceUserDefault completionHandler:handler];
-}
-
-
-- (void)validateAPIRequestWithCompletionHandler:(VENGenericRequestCompletionHandler)handler {
-    // Session is not open
-    if (self.session.state != VENSessionStateOpen) {
-        NSError *error = [NSError sessionNotOpenError];
-        handler(nil, NO, error);
-        return;
-    }
-    // Token has expired
-    NSDate *now = [NSDate date];
-    if ([[self.session.expirationDate laterDate:now] isEqualToDate:now]) {
-        NSError *error = [NSError accessTokenExpiredError];
-        handler(nil, NO, error);
-        return;
-    }
-    // VENCore has not been initialized
-    VENCore *core = [VENCore defaultCore];
-    if (!core || !core.accessToken) {
-        VENCore *core = [[VENCore alloc] init];
-        [core setAccessToken:self.session.accessToken];
-        [VENCore setDefaultCore:core];
-    }
-}
-
-
-#pragma mark - URLs
-
-- (BOOL)handleOpenURL:(NSURL *)url {
-    if ([VENURLProtocol canInitWithRequest:[NSURLRequest requestWithURL:url]]) {
-        VENURLProtocol *urlProtocol = [[VENURLProtocol alloc] initWithRequest:[NSURLRequest requestWithURL:url] cachedResponse:nil client:nil];
-        [urlProtocol startLoading];
-        return YES;
-    }
-    return NO;
-}
-
-
-- (NSString *)URLPathWithType:(VENTransactionType)type
-                       amount:(NSUInteger)amount
-                         note:(NSString *)note
-                    recipient:(NSString *)recipientHandle {
-    NSString *identifier = [self currentDeviceIdentifier];
-
-    NSMutableDictionary *queryDictionary = [NSMutableDictionary dictionary];
-    queryDictionary[@"client"] = @"ios";
-    queryDictionary[@"app_name"] = self.appName ?: @"";
-    queryDictionary[@"app_id"] = self.appId ?: @"";
-    queryDictionary[@"device_id"] = identifier ?: @"";
-    queryDictionary[@"txn"] = [VENTransaction typeString:type];
-    queryDictionary[@"note"] = note;
-    queryDictionary[@"app_version"] = VEN_CURRENT_SDK_VERSION;
-
-    if (amount) {
-        queryDictionary[@"amount"] = [VENTransaction amountString:amount];
-    }
-
-    if (recipientHandle && ![recipientHandle isEqualToString:@""]) {
-        queryDictionary[@"recipients"] = recipientHandle;
-    }
-
-    NSString *queryString = [CMDQueryStringSerialization queryStringWithDictionary:queryDictionary];
-    return [NSString stringWithFormat:@"/?%@", queryString];
-}
-
-
-- (NSString *)baseURLPath {
-    if (self.internalDevelopment) {
-        return @"http://api.dev.venmo.com/v1/";
-    }
-    return @"https://api.venmo.com/v1/";
 }
 
 
