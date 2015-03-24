@@ -16,7 +16,14 @@ function Venmo () {};
  */
 
 Venmo.prototype.send = function (onSuccess, onFail, appId, appName, recipients, amount, note, txn) {
-  if (typeof text === "undefined" || text === null) text = "";
+  console.log('amount1:');
+  console.log(amount);
+  if (typeof amount === 'string' && cordova.platformId === 'ios') {
+    amount = '' + (parseFloat(amount) * 100);
+  }
+
+  console.log('amount2:');
+  console.log(amount);
 	cordova.exec(onSuccess, onFail, "Venmo", "send", [appId,appName,recipients,amount,note,txn]);
 };
 

@@ -50,10 +50,10 @@
             <key>CFBundleTypeRole</key>
             <string>Editor</string>
             <key>CFBundleURLName</key>
-            <string>$URL_SCHEME</string>
+            <string>venmo2456</string>
             <key>CFBundleURLSchemes</key>
             <array>
-              <string>$URL_SCHEME</string>
+              <string>venmo2456</string>
             </array>
           </dict>
         </array>
@@ -61,7 +61,6 @@
 
       <header-file src="src/ios/CDVenmo.h" />
       <source-file src="src/ios/CDVenmo.m" />
-
 
       <framework src="UIKit.framework" />
       <framework src="Security.framework" />
