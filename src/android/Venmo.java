@@ -91,7 +91,7 @@ public class Venmo extends CordovaPlugin {
             Log.d(TAG, "signedrequest: " + signedrequest);
 
             if(signedrequest != null) {
-                VenmoLibrary.VenmoResponse response = (new VenmoLibrary()).validateVenmoPaymentResponse(signedrequest, "qzXgnaB4XbJQx3y8vQtB76PTGSKqbPU");
+                VenmoLibrary.VenmoResponse response = (new VenmoLibrary()).validateVenmoPaymentResponse(signedrequest, "qzXgnaB4XbJQx3y8vQtB76PTGSKqbPUp");
                 String successCode = response.getSuccess();
                 Log.d(TAG, "response.getSuccess: " + successCode);
 
@@ -99,7 +99,12 @@ public class Venmo extends CordovaPlugin {
                     //Payment successful.  Use data from response object to display a success message
                     String note = response.getNote();
                     String amount = response.getAmount();
-                    cbContext.success(note, amount, successCode);
+
+                    Log.d(TAG, "note: " + note);
+                    Log.d(TAG, "amount: " + amount);
+
+                    String json = String.format("{\"note\":\"%s\",\"amount\":\"%s\",\"successCode\":\"%s\"}",note,amount,successCode); 
+                    cbContext.success(json);
                 }
             }
             else {
