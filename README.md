@@ -4,8 +4,10 @@ API looks like:
 
 ```javascript
 
-var success = function(note, amount, code) {
-  console.log('success: ' + note + ' : ' + amount + ' : ' + code);
+var success = function(json) {
+  // json:
+  // {amount: "0.01", note: "hey", code: "1"}
+  console.log(JSON.parse(json));
 };
 var error = function(err) {
   console.log('err: ' + err);
