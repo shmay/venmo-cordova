@@ -18,7 +18,7 @@ function Venmo () {};
 Venmo.prototype.send = function (onSuccess, onFail, appId, appName, recipients, amount, note, txn) {
   console.log('amount1:');
   console.log(amount);
-  if (typeof amount === 'string' && cordova.platformId === 'ios') {
+  if (cordova.platformId === 'ios') {
     amount = '' + (parseFloat(amount) * 100);
   }
 
