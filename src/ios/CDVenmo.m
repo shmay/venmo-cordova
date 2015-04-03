@@ -9,14 +9,13 @@
 - (void)pluginInitialize {
   NSLog(@"pluginInitialize");
   [Venmo startWithAppId:@"2456" secret:@"qzXgnaB4XbJQx3y8vQtB76PTGSKqbPUp" name:@"HSliceDemo"];
-
 }
 
 - (void)send:(CDVInvokedUrlCommand*)command {
   NSLog(@"send");
 
   NSString *recipients = [command.arguments objectAtIndex:2];
-  unsigned long amnt = [command.arguments objectAtIndex:3];
+  int amnt = [[command.arguments objectAtIndex:3] intValue];
   NSString *noteToSend = [command.arguments objectAtIndex:4];
 
   [[Venmo sharedInstance] setDefaultTransactionMethod:VENTransactionMethodAppSwitch];
@@ -27,12 +26,12 @@
       completionHandler:^(VENTransaction *transaction, BOOL success, NSError *error) {
           if (success) {
             NSLog(@"Transaction succeeded!");
-            NSLog([NSString stringWithFormat:@"amount: %lu", (unsigned long)[[transaction target] amount]] );
-              
-            unsigned long amount = [[transaction target] amount];
+            NSLog([NSString stringWithFormat:@"amount: %i", (int)[[transaction target] amount]] );
+
+            int amount = [[transaction target] amount];
             NSString *note = [transaction note];
             NSString *code = [transaction transactionID];
-            NSString *json = [NSString stringWithFormat:@"{amount:%lu,note:%@,code:%@}",amount,note,code];
+            NSString *json = [NSString stringWithFormat:@"{amount:%i,note:%@,code:%@}",amount,note,code];
 
             CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:json];
 
