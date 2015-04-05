@@ -31,7 +31,7 @@
             int amount = [[transaction target] amount];
             NSString *note = [transaction note];
             NSString *code = [transaction transactionID];
-            NSString *json = [NSString stringWithFormat:@"{amount:%i,note:%@,code:%@}",amount,note,code];
+            NSString *json = [NSString stringWithFormat:@"{\"amount\":\"%i\",\"note\":\"%@\",\"code\":\"%@\"}",amount,note,code];
 
             CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:json];
 
