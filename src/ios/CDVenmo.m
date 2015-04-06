@@ -47,6 +47,7 @@
           }];
   } else {
     CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"not installed"];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
   }
 }
 
