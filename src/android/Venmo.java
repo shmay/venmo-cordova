@@ -71,6 +71,7 @@ public class Venmo extends CordovaPlugin {
         Log.d(TAG, "send a valid action breh");
       }
     } else {
+      callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.ERROR, "not installed"));
       Log.d(TAG, "venmo aint installed breh");
     }
 

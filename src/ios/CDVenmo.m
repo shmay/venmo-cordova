@@ -14,36 +14,40 @@
 - (void)send:(CDVInvokedUrlCommand*)command {
   NSLog(@"send");
 
-  NSString *recipients = [command.arguments objectAtIndex:2];
-  int amnt = [[command.arguments objectAtIndex:3] intValue];
-  NSString *noteToSend = [command.arguments objectAtIndex:4];
+  if ([Venmo isVenmoAppInstalled]) {
+      NSString *recipients = [command.arguments objectAtIndex:2];
+      int amnt = [[command.arguments objectAtIndex:3] intValue];
+      NSString *noteToSend = [command.arguments objectAtIndex:4];
 
-  [[Venmo sharedInstance] setDefaultTransactionMethod:VENTransactionMethodAppSwitch];
-  
-  [[Venmo sharedInstance] sendPaymentTo:recipients
-                                 amount:amnt // this is in cents!
-                                 note:noteToSend
-      completionHandler:^(VENTransaction *transaction, BOOL success, NSError *error) {
-          if (success) {
-            NSLog(@"Transaction succeeded!");
-            NSLog([NSString stringWithFormat:@"amount: %i", (int)[[transaction target] amount]] );
+      [[Venmo sharedInstance] setDefaultTransactionMethod:VENTransactionMethodAppSwitch];
+      
+      [[Venmo sharedInstance] sendPaymentTo:recipients
+                                     amount:amnt // this is in cents!
+                                     note:noteToSend
+          completionHandler:^(VENTransaction *transaction, BOOL success, NSError *error) {
+              if (success) {
+                NSLog(@"Transaction succeeded!");
+                NSLog([NSString stringWithFormat:@"amount: %i", (int)[[transaction target] amount]] );
 
-            int amount = [[transaction target] amount];
-            NSString *note = [transaction note];
-            NSString *code = [transaction transactionID];
-            NSString *json = [NSString stringWithFormat:@"{\"amount\":\"%i\",\"note\":\"%@\",\"code\":\"%@\"}",amount,note,code];
+                int amount = [[transaction target] amount];
+                NSString *note = [transaction note];
+                NSString *code = [transaction transactionID];
+                NSString *json = [NSString stringWithFormat:@"{\"amount\":\"%i\",\"note\":\"%@\",\"code\":\"%@\"}",amount,note,code];
 
-            CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:json];
+                CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:json];
 
-            [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-          } else {
-            NSLog(@"Transaction failed with error: %@", [error localizedDescription]);
+                [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+              } else {
+                NSLog(@"Transaction failed with error: %@", [error localizedDescription]);
 
-            CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"{msg: erroraya}"];
+                CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"{msg: erroraya}"];
 
-            [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-          }
-      }];
+                [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+              }
+          }];
+  } else {
+    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"not installed"];
+  }
 }
 
 - (void)handleOpenURL:(NSNotification*)notification
