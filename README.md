@@ -11,6 +11,9 @@ var success = function(json) {
 };
 var error = function(err) {
   console.log('err: ' + err);
+  if (err === 'not installed') {
+    alert('venmo app not installed');
+  } 
 };
 
 var appId = '1234';
@@ -22,3 +25,5 @@ var txn = "pay"; // txn aka transaction: pay|charge
 
 cordova.plugins.venmo.send(success, error, appId, appName, recipients,amount,note,txn);
 ```
+
+if app is not installed, the error callback will be called with the message 'not installed' (lowercase)
